@@ -236,6 +236,25 @@
     let audioInitialized = false;
     let meowSynth, barkSynth, winSynth, keySynth;
 
+    const CUSTOM_SOUNDS = {
+        move:  '',   // cat takes a step      e.g. 'sounds/meow.mp3'
+        fish:  '',   // cat collects a fish   e.g. 'sounds/fish.mp3'
+        dog:   'sounds/fahhh.mp3',   // cat meets a dog       e.g. 'sounds/bark.mp3'
+        win:   '',   // level completed       e.g. 'sounds/win.mp3'
+        music: ''    // background music loop e.g. 'sounds/music.mp3'
+    };
+    const SOUND_VOLUME = 0.8;  // 0 (silent) to 1 (full)
+    const MUSIC_VOLUME = 0.3;
+ 
+    let bgMusic = null;
+    function startMusic() {
+        if (!CUSTOM_SOUNDS.music || bgMusic) return;
+        bgMusic = new Audio(CUSTOM_SOUNDS.music);
+        bgMusic.loop = true;
+        bgMusic.volume = MUSIC_VOLUME;
+        bgMusic.play().catch(() => { bgMusic = null; });
+    }
+ 
     async function initAudio() {
         if (audioInitialized) return;
         await Tone.start();
