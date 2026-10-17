@@ -38,6 +38,9 @@ const currentScoreEl = document.getElementById('current-score');
 const highScoreEl = document.getElementById('high-score');
 const btnReset = document.getElementById('btn-reset');
 const btnSolution = document.getElementById('btn-solution');
+const btnAI = document.getElementById('btn-ai');
+const AI_COST = 200;
+const AI_LABEL = btnAI.innerHTML;
 const boardEl = document.getElementById('game-board');
 
 let audioInitialized = false;
@@ -328,6 +331,12 @@ function loadLevel(index) {
 function updateScoreDisplay() {
     currentScoreEl.textContent = currentScore;
     highScoreEl.textContent = highScore;
+
+    // AI Solve is greyed out until the player has enough points
+    const locked = currentScore < AI_COST;
+    btnAI.classList.toggle('opacity-50', locked);
+    btnAI.classList.toggle('cursor-not-allowed', locked);
+    btnAI.title = locked ? `You need ${AI_COST} points to use AI Solve` : '';
 }
 
 function resetGameState(isPenalty = true) {
@@ -590,12 +599,18 @@ function solveWithAI() {
     return null;
 }
 
-const btnAI = document.getElementById('btn-ai');
 btnAI.addEventListener('click', () => {
     initAudio();
     if (aiRunning || gameOver) return;
 
-    currentScore = Math.max(0, currentScore - 200);
+    // Not enough points: show a short message instead of running the AI
+    if (currentScore < AI_COST) {
+        btnAI.textContent = `Need ${AI_COST} pts (you have ${currentScore})`;
+        setTimeout(() => { btnAI.innerHTML = AI_LABEL; }, 1500);
+        return;
+    }
+
+    currentScore -= AI_COST;
     updateScoreDisplay();
 
     resetGameState(false); // put the cat back at the start with all fish restored
