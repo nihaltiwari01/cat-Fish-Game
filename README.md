@@ -1,3 +1,6 @@
+
+
+
 # 🐱 Cat Fish
 
 A small browser puzzle game. Guide the cat across a grid, collect every fish, and get home safely, all while avoiding hidden dogs that guard the edges of their tiles.
@@ -7,8 +10,7 @@ A small browser puzzle game. Guide the cat across a grid, collect every fish, an
 ## Gameplay Video
 
 <!-- Add your gameplay recording here later. Pick ONE of the options below and delete the rest. -->
-
-*Video coming soon.*
+https://github.com/user-attachments/assets/ba66558d-908d-47cc-957e-7bdac967fd2a
 
 <!--
 Option 1: Upload the video to YouTube and link a thumbnail
