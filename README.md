@@ -39,7 +39,7 @@ GitHub uploads it and inserts a link that plays right on the page.
 | Collect a fish | +50 |
 | Finish a level | +100 |
 | Run into a dog | -50 |
-| Use "Show Dogs" | -100 |
+| Use "Show Dogs" | -100 (needs at least 100 points) |
 | Use "AI Solve" | -200 (needs at least 200 points; no points earned for that run) |
 
 Your high score is saved in your browser, so it is still there next time you play.

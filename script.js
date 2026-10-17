@@ -40,6 +40,8 @@ const btnReset = document.getElementById('btn-reset');
 const btnSolution = document.getElementById('btn-solution');
 const btnAI = document.getElementById('btn-ai');
 const AI_COST = 200;
+const DOGS_COST = 100;
+const DOGS_LABEL = btnSolution.innerHTML;
 const AI_LABEL = btnAI.innerHTML;
 const boardEl = document.getElementById('game-board');
 
@@ -337,6 +339,12 @@ function updateScoreDisplay() {
     btnAI.classList.toggle('opacity-50', locked);
     btnAI.classList.toggle('cursor-not-allowed', locked);
     btnAI.title = locked ? `You need ${AI_COST} points to use AI Solve` : '';
+
+    // Show Dogs is greyed out until the player has enough points
+    const dogsLocked = currentScore < DOGS_COST;
+    btnSolution.classList.toggle('opacity-50', dogsLocked);
+    btnSolution.classList.toggle('cursor-not-allowed', dogsLocked);
+    btnSolution.title = dogsLocked ? `You need ${DOGS_COST} points to show the dogs` : '';
 }
 
 function resetGameState(isPenalty = true) {
@@ -535,7 +543,15 @@ btnReset.addEventListener('click', () => {
 
 btnSolution.addEventListener('click', () => {
     initAudio();
-    currentScore = Math.max(0, currentScore - 100); // Exactly -100 points penalty for showing dogs
+
+    // Not enough points: show a short message instead of revealing the dogs
+    if (currentScore < DOGS_COST) {
+        btnSolution.textContent = `Need ${DOGS_COST} pts (you have ${currentScore})`;
+        setTimeout(() => { btnSolution.innerHTML = DOGS_LABEL; }, 1500);
+        return;
+    }
+
+    currentScore -= DOGS_COST; // -100 points penalty for showing dogs
     updateScoreDisplay();
     showingSolution = true;
     renderBoard();
