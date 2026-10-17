@@ -1,6 +1,3 @@
-
-
-
 # 🐱 Cat Fish
 
 A small browser puzzle game. Guide the cat across a grid, collect every fish, and get home safely, all while avoiding hidden dogs that guard the edges of their tiles.
@@ -10,7 +7,8 @@ A small browser puzzle game. Guide the cat across a grid, collect every fish, an
 ## Gameplay Video
 
 <!-- Add your gameplay recording here later. Pick ONE of the options below and delete the rest. -->
-https://github.com/user-attachments/assets/ba66558d-908d-47cc-957e-7bdac967fd2a
+
+*Video coming soon.*
 
 <!--
 Option 1: Upload the video to YouTube and link a thumbnail
@@ -73,19 +71,23 @@ No build step or installation needed.
 
 An internet connection is needed on first load because the game pulls Tailwind CSS and Tone.js from a CDN.
 
+## Project Structure
+
+```
+cat-Fish-Game/
+├── index.html     # page layout
+├── style.css      # styling and themes
+├── script.js      # game logic, AI solver and sound
+├── sounds/        # mp3 sound effects and music
+└── README.md
+```
+
 ## Built With
 
 - HTML, CSS and JavaScript
 - [Tailwind CSS](https://tailwindcss.com/) (via CDN)
 - [Tone.js](https://tonejs.github.io/) (via CDN) for audio
 
-## Deploy with GitHub Pages
-
-1. Push the project to GitHub.
-2. Go to **Settings → Pages**.
-3. Under **Branch**, select `main` and `/ (root)`, then save.
-4. Your game will be live after a minute or two.
-
 ## License
 
-Add a license of your choice, for example MIT, or remove this section.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
