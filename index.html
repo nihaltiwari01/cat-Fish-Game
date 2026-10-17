@@ -161,6 +161,9 @@
             <button id="btn-solution" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 lg:py-3 px-6 rounded shadow border-2 border-green-900 transition-colors text-base lg:text-lg">
                 Show Dogs (-100 pts)
             </button>
+            <button id="btn-ai" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 lg:py-3 px-6 rounded shadow border-2 border-purple-900 transition-colors text-base lg:text-lg">
+                🤖 AI Solve (-200 pts)
+            </button>
         </div>
 
         <!-- Rules Card -->
@@ -171,6 +174,7 @@
                 <li>Use Arrow Keys to move. Collect all fish 🐟 first.</li>
                 <li>Reach the house 🏡 with your fish to win (+100 pts)!</li>
                 <li>Dogs 🐶 block one specific edge of their tile. Watch out!</li>
+                <li>Stuck? 🤖 AI Solve costs 200 pts, then the cat collects the fish and goes home by itself (no points earned for that run).</li>
             </ul>
         </div>
     </div>
@@ -208,6 +212,8 @@
     let grid = [];
     let sessionGrid = []; 
     let solutionPathCoords = []; 
+    let aiRunning = false;
+    let aiRunId = 0;
     let showingSolution = false;
     let gameOver = false;
     let visitedCells = [];
@@ -363,53 +369,109 @@
             fishPositions.push(fPos);
         }
 
-        let doorPos = getRandomEmptyPos();
+        // Place the house far from the start so the route is longer
+        let doorPos;
+        let doorTries = 0;
+        do {
+            doorPos = getRandomEmptyPos();
+            doorTries++;
+        } while (doorTries < 50 && (Math.abs(doorPos.x - startPos.x) + Math.abs(doorPos.y - startPos.y)) < size - 1);
         grid[doorPos.y][doorPos.x] = DOOR_EXIT;
         
         boardEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
         boardEl.style.gridTemplateRows = `repeat(${size}, 1fr)`;
         levelTitleEl.textContent = levelData.name;
 
+        // Build the guaranteed safe route and remember which side of each tile it enters from
         let safeCoords = new Set();
+        let safeEntries = {}; // "x,y" -> Set of dog types that would block the safe route
+        let segments = [];
         let currentP = startPos;
-        
-        for(let fish of fishPositions) {
-            let path = getSafePathCoords(grid, currentP.x, currentP.y, fish.x, fish.y);
-            path.forEach(p => safeCoords.add(p));
+
+        for (let fish of fishPositions) {
+            segments.push(getSafePathCoords(grid, currentP.x, currentP.y, fish.x, fish.y));
             currentP = fish;
         }
-        let pathToExit = getSafePathCoords(grid, currentP.x, currentP.y, doorPos.x, doorPos.y);
-        pathToExit.forEach(p => safeCoords.add(p));
-        
+        segments.push(getSafePathCoords(grid, currentP.x, currentP.y, doorPos.x, doorPos.y));
+
+        segments.forEach(path => {
+            path.forEach((p, i) => {
+                safeCoords.add(p);
+                if (i > 0) {
+                    const [px, py] = path[i - 1].split(',').map(Number);
+                    const [cx, cy] = p.split(',').map(Number);
+                    const dx = cx - px, dy = cy - py;
+                    let blockedBy;
+                    if (dy === 1) blockedBy = DOG_UP;
+                    else if (dy === -1) blockedBy = DOG_DOWN;
+                    else if (dx === 1) blockedBy = DOG_LEFT;
+                    else blockedBy = DOG_RIGHT;
+                    if (!safeEntries[p]) safeEntries[p] = new Set();
+                    safeEntries[p].add(blockedBy);
+                }
+            });
+        });
+
         solutionPathCoords = Array.from(safeCoords);
 
-        let availableSpots = [];
+        // Which neighbour does each dog type guard?
+        const dogSide = {
+            [DOG_UP]:    { dx: 0,  dy: -1 },
+            [DOG_DOWN]:  { dx: 0,  dy: 1 },
+            [DOG_LEFT]:  { dx: -1, dy: 0 },
+            [DOG_RIGHT]: { dx: 1,  dy: 0 }
+        };
+
+        // Difficulty settings per level
+        const pathDogChance = [0.6, 0.75, 0.9][index];
+
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
-                if (grid[y][x] === EMPTY && !safeCoords.has(`${x},${y}`)) {
-                    availableSpots.push({x, y});
+                if (grid[y][x] !== EMPTY) continue;
+
+                const key = `${x},${y}`;
+                const onPath = safeCoords.has(key);
+
+                // Only sides that face a real neighbouring tile are useful
+                const usefulSides = DOG_TYPES.filter(t => {
+                    const nx = x + dogSide[t].dx, ny = y + dogSide[t].dy;
+                    return nx >= 0 && nx < size && ny >= 0 && ny < size;
+                });
+
+                if (onPath) {
+                    // Dogs on the safe route guard sides the safe route does NOT use,
+                    // so the level always stays solvable but shortcuts and detours become risky
+                    const used = safeEntries[key] || new Set();
+                    const options = usefulSides.filter(t => !used.has(t));
+                    if (options.length > 0 && Math.random() < pathDogChance) {
+                        grid[y][x] = options[Math.floor(Math.random() * options.length)];
+                    }
+                } else {
+                    // Off-route tiles: dogs almost everywhere, denser near the house
+                    const distToHouse = Math.max(Math.abs(x - doorPos.x), Math.abs(y - doorPos.y));
+                    let spawnChance;
+                    if (distToHouse <= 2) spawnChance = 1.0;
+                    else if (distToHouse === 3) spawnChance = 0.95;
+                    else spawnChance = 0.85;
+
+                    if (Math.random() < spawnChance) {
+                        // 75% of the time, guard the side that faces the safe route
+                        const towardRoute = usefulSides.filter(t => {
+                            const nx = x + dogSide[t].dx, ny = y + dogSide[t].dy;
+                            return safeCoords.has(`${nx},${ny}`);
+                        });
+                        let pick;
+                        if (towardRoute.length > 0 && Math.random() < 0.75) {
+                            pick = towardRoute[Math.floor(Math.random() * towardRoute.length)];
+                        } else {
+                            pick = usefulSides[Math.floor(Math.random() * usefulSides.length)];
+                        }
+                        grid[y][x] = pick;
+                    }
                 }
             }
         }
 
-        for (let i = 0; i < availableSpots.length; i++) {
-            let spot = availableSpots[i];
-            
-            // Calculate distance to the house (Chebyshev distance)
-            let distToHouse = Math.max(Math.abs(spot.x - doorPos.x), Math.abs(spot.y - doorPos.y));
-            
-            // Higher probability of spawning a dog the closer it is to the house
-            let spawnChance = 0;
-            if (distToHouse <= 1) spawnChance = 1.0;       // 100% chance right next to house
-            else if (distToHouse === 2) spawnChance = 0.95;// 95% chance 2 tiles away
-            else if (distToHouse === 3) spawnChance = 0.8; // 80% chance 3 tiles away
-            else spawnChance = 0.5;                        // 50% chance far away
-
-            if (Math.random() < spawnChance) {
-                grid[spot.y][spot.x] = DOG_TYPES[Math.floor(Math.random() * DOG_TYPES.length)];
-            }
-        }
-        
         sessionGrid = grid.map(row => [...row]);
         
         updateScoreDisplay();
@@ -424,6 +486,7 @@
     }
 
     function resetGameState(isPenalty = true) {
+        aiRunning = false; // any reset or new level stops the AI
         playerPos = { ...startPos };
         hasFish = false;
         fishCollected = 0;
@@ -505,8 +568,9 @@
         }
     }
 
-    function movePlayer(dx, dy) {
+    function movePlayer(dx, dy, fromAI = false) {
         if (gameOver) return;
+        if (aiRunning && !fromAI) return; // player input is locked while the AI plays
 
         const newX = playerPos.x + dx;
         const newY = playerPos.y + dy;
@@ -564,7 +628,7 @@
             hasFish = fishCollected >= fishTotal;
             fishLeftEl.textContent = fishTotal - fishCollected;
             grid[newY][newX] = EMPTY; 
-            currentScore += 50; // +100 points per fish collected
+            if (!aiRunning) currentScore += 50; // fish points (not awarded during an AI run)
         } else {
             playSound('move');
         }
@@ -574,7 +638,7 @@
     }
 
     function winGame() {
-        currentScore += 100; // Exactly +100 points for finishing the level
+        if (!aiRunning) currentScore += 100; // finish bonus (not awarded during an AI run)
         
         if (currentScore > highScore) {
             highScore = currentScore;
@@ -621,6 +685,86 @@
             showingSolution = false;
             renderBoard();
         }, 1500); 
+    });
+
+    // ---------- AI Solver ----------
+    function dogBlocks(cellVal, dx, dy) {
+        return (cellVal === DOG_UP && dy === 1) ||
+               (cellVal === DOG_DOWN && dy === -1) ||
+               (cellVal === DOG_LEFT && dx === 1) ||
+               (cellVal === DOG_RIGHT && dx === -1);
+    }
+
+    // Breadth-first search over (position, fish collected) to find the shortest safe route
+    function solveWithAI() {
+        const g = sessionGrid;
+        const n = g.length;
+        const fish = [];
+        g.forEach((row, y) => row.forEach((v, x) => { if (v === FISH) fish.push({ x, y }); }));
+        const full = (1 << fish.length) - 1;
+
+        const startKey = `${startPos.x},${startPos.y},0`;
+        const parent = new Map([[startKey, null]]);
+        const queue = [{ x: startPos.x, y: startPos.y, mask: 0 }];
+        const dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+
+        for (let qi = 0; qi < queue.length; qi++) {
+            const cur = queue[qi];
+            const curKey = `${cur.x},${cur.y},${cur.mask}`;
+
+            for (const [dx, dy] of dirs) {
+                const nx = cur.x + dx, ny = cur.y + dy;
+                if (nx < 0 || ny < 0 || nx >= n || ny >= n) continue;
+
+                const v = g[ny][nx];
+                if (dogBlocks(v, dx, dy)) continue;
+
+                let mask = cur.mask;
+                if (v === FISH) mask |= 1 << fish.findIndex(f => f.x === nx && f.y === ny);
+
+                const key = `${nx},${ny},${mask}`;
+                if (parent.has(key)) continue;
+                parent.set(key, { prev: curKey, move: [dx, dy] });
+
+                if (v === DOOR_EXIT && mask === full) {
+                    const moves = [];
+                    let k = key;
+                    while (parent.get(k)) {
+                        moves.unshift(parent.get(k).move);
+                        k = parent.get(k).prev;
+                    }
+                    return moves;
+                }
+                queue.push({ x: nx, y: ny, mask });
+            }
+        }
+        return null;
+    }
+
+    const btnAI = document.getElementById('btn-ai');
+    btnAI.addEventListener('click', () => {
+        initAudio();
+        if (aiRunning || gameOver) return;
+
+        currentScore = Math.max(0, currentScore - 200);
+        updateScoreDisplay();
+
+        resetGameState(false); // put the cat back at the start with all fish restored
+        const moves = solveWithAI();
+        if (!moves) return;
+
+        aiRunning = true;
+        const runId = ++aiRunId;
+        let step = 0;
+
+        function nextStep() {
+            if (!aiRunning || runId !== aiRunId) return; // stopped by reset or new level
+            if (step >= moves.length) return;
+            const [dx, dy] = moves[step++];
+            movePlayer(dx, dy, true);
+            setTimeout(nextStep, 300);
+        }
+        setTimeout(nextStep, 400);
     });
 
     const btnTheme = document.getElementById('btn-theme');

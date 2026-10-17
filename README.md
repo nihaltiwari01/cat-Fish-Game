@@ -2,7 +2,7 @@
 
 A small browser puzzle game. Guide the cat across a grid, collect every fish, and get home safely, all while avoiding hidden dogs that guard the edges of their tiles.
 
-**Play it online:** `https://nihaltiwari01.github.io/catFish/`
+**Play it online:** `https://YOUR-USERNAME.github.io/YOUR-REPO-NAME/`
 
 ## How to Play
 
@@ -20,6 +20,7 @@ A small browser puzzle game. Guide the cat across a grid, collect every fish, an
 | Finish a level | +100 |
 | Run into a dog | -50 |
 | Use "Show Dogs" | -100 |
+| Use "AI Solve" | -200 (no points earned for that run) |
 
 Your high score is saved in your browser, so it is still there next time you play.
 
@@ -34,6 +35,7 @@ Your high score is saved in your browser, so it is still there next time you pla
 ## Features
 
 - Three levels with growing difficulty
+- 🤖 AI Solve button: the cat collects all the fish and walks home on its own
 - Keyboard and touch controls
 - Light and dark (night) theme
 - Sound effects (powered by Tone.js)
