@@ -2,12 +2,32 @@
 
 A small browser puzzle game. Guide the cat across a grid, collect every fish, and get home safely, all while avoiding hidden dogs that guard the edges of their tiles.
 
-**Play it online:** `https://YOUR-USERNAME.github.io/YOUR-REPO-NAME/`
+**Play it online:** [https://nihaltiwari01.github.io/cat-Fish-Game/](https://nihaltiwari01.github.io/cat-Fish-Game/)
+
+## Gameplay Video
+
+<!-- Add your gameplay recording here later. Pick ONE of the options below and delete the rest. -->
+
+*Video coming soon.*
+
+<!--
+Option 1: Upload the video to YouTube and link a thumbnail
+[![Watch the gameplay](https://img.youtube.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+
+Option 2: Put the video file in your repo (e.g. a "media" folder) and link it
+[Watch the gameplay video](media/gameplay.mp4)
+
+Option 3: Use a GIF (works inline in the README)
+![Gameplay](media/gameplay.gif)
+
+Option 4: Drag and drop the video into the README while editing it on github.com.
+GitHub uploads it and inserts a link that plays right on the page.
+-->
 
 ## How to Play
 
 - Start at the dark square where the cat 🐱 begins.
-- Move with the **Arrow Keys** on a keyboard, or the on-screen arrow buttons on phones and tablets.
+- Move with the **Arrow Keys**, the on-screen arrow buttons, or your **mouse/finger**: click a tile next to the cat to move there.
 - Collect all the fish 🐟 on the board first.
 - Then reach the house 🏡 to finish the level.
 - Dogs 🐶 are hidden. Each one blocks one specific edge of its tile. If you run into one, the level resets and you lose points.
@@ -36,7 +56,7 @@ Your high score is saved in your browser, so it is still there next time you pla
 
 - Three levels with growing difficulty
 - 🤖 AI Solve button: the cat collects all the fish and walks home on its own
-- Keyboard and touch controls
+- Keyboard, mouse and touch controls
 - Light and dark (night) theme
 - Sound effects (powered by Tone.js)
 - Responsive layout for desktop and mobile

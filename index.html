@@ -115,6 +115,10 @@
         .dog-revealed-right { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 40%; opacity: 0.9; }
 
         .door-open { border-color: #22c55e; }
+
+        /* Mouse / touch play: tiles next to the cat are clickable */
+        .cell-adjacent { cursor: pointer; }
+        .cell-adjacent:hover { outline: 3px solid #facc15; outline-offset: -3px; filter: brightness(1.12); }
     </style>
 </head>
 <body class="p-2 md:p-4 flex flex-col lg:flex-row h-screen w-full overflow-hidden no-select transition-colors gap-3 lg:gap-6 box-border">
@@ -171,7 +175,7 @@
             <h3 class="font-bold mb-2 text-base lg:text-lg" style="color: var(--text-color);">Game Rules:</h3>
             <ul class="list-disc pl-5 space-y-1.5 lg:space-y-3 text-sm lg:text-base" style="color: var(--text-muted);">
                 <li>Start at the dark square ( 🐱 ).</li>
-                <li>Use Arrow Keys to move. Collect all fish 🐟 first.</li>
+                <li>Use Arrow Keys, the on-screen arrows, or click a tile next to the cat to move. Collect all fish 🐟 first.</li>
                 <li>Reach the house 🏡 with your fish to win (+100 pts)!</li>
                 <li>Dogs 🐶 block one specific edge of their tile. Watch out!</li>
                 <li>Stuck? 🤖 AI Solve costs 200 pts, then the cat collects the fish and goes home by itself (no points earned for that run).</li>
@@ -518,6 +522,10 @@
                 cellDiv.dataset.x = x;
                 cellDiv.dataset.y = y;
 
+                if (!gameOver && !aiRunning && Math.abs(x - playerPos.x) + Math.abs(y - playerPos.y) === 1) {
+                    cellDiv.classList.add('cell-adjacent');
+                }
+
                 let cellContent = '';
 
                 if (x === playerPos.x && y === playerPos.y) {
@@ -765,6 +773,16 @@
             setTimeout(nextStep, 300);
         }
         setTimeout(nextStep, 400);
+    });
+
+    // Mouse / touch: click a tile next to the cat to move there
+    boardEl.addEventListener('click', (e) => {
+        const cell = e.target.closest('.grid-cell');
+        if (!cell) return;
+        initAudio();
+        const dx = Number(cell.dataset.x) - playerPos.x;
+        const dy = Number(cell.dataset.y) - playerPos.y;
+        if (Math.abs(dx) + Math.abs(dy) === 1) movePlayer(dx, dy);
     });
 
     const btnTheme = document.getElementById('btn-theme');
